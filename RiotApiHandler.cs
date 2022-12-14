@@ -10,7 +10,7 @@ namespace DiscordLeagueBot;
 public class RiotApiCallHandler
 {
     private HttpClient _httpClient= new();
-    private string _riotApiKey = "RGAPI-d847892c-334e-4011-9cb2-83d6a0e2cf89";
+    private string _riotApiKey = "RGAPI-530cd134-3d39-49cd-bebd-ee2ed67da6eb";
     
     public RiotApiCallHandler()
     {
@@ -72,12 +72,29 @@ public class RiotApiCallHandler
         }
     }
 
-    public async Task<string[]> GetMatchIdHistory(string puuid)
+    public async Task<string> GetMatchIdHistoryWithPuuid(string puuid)
     {
         try
         {
-            var url = $"https://na1.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids";
+            var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=20&api_key={_riotApiKey}";
             var jsonText = await GetJsonStringFromUrlAsync(url);
+            Console.WriteLine(jsonText);
+            return jsonText;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw new Exception("Failed to get match id history.", e);
+        }
+    }
+    
+    public async Task<string[]> GetMatchIdHistoryStringArrayWithPuuid(string puuid)
+    {
+        try
+        {
+            var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=20&api_key={_riotApiKey}";
+            var jsonText = await GetJsonStringFromUrlAsync(url);
+            Console.WriteLine(jsonText);
             var matchIdArray = JsonSerializer.Deserialize<string[]>(jsonText);
             return matchIdArray;
         }
@@ -85,6 +102,22 @@ public class RiotApiCallHandler
         {
             Console.WriteLine(e);
             throw new Exception("Failed to get match id history.", e);
+        }
+    }
+
+    public async Task<string> GetMatchV5JsonWithMatchId(string matchId)
+    {
+        try
+        {
+            var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/{matchId}?api_key={_riotApiKey}";
+            var jsonText = await GetJsonStringFromUrlAsync(url);
+            Console.WriteLine(jsonText);
+            return jsonText;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw new Exception("Failed to get match v5.", e);
         }
     }
 }
