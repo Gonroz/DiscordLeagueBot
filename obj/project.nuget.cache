@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "QKHWDKiihUqTpNqfGF0IZ7u8v/TvEzFr9gCh00ZVfF616OVhOtYVySJodLndlN6Oo1GVdVYpi7fDt3Y8bZ3Wqg==",
+  "dgSpecHash": "5gW8CkH3BOnOgsaK0sMDcLbpkAMM48SVMmh2cF99YaZXSc2Y4WufMmRfWOuqS3+HmoCqwN3QzQbH1+1xt4bywQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\JT\\RiderProjects\\DiscordPingPongBot\\DiscordLeagueBot\\DiscordLeagueBot.csproj",
+  "projectFilePath": "C:\\Users\\JT\\RiderProjects\\DiscordLeagueBot\\DiscordLeagueBot\\DiscordLeagueBot.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\JT\\.nuget\\packages\\discord.net\\3.8.1\\discord.net.3.8.1.nupkg.sha512",
     "C:\\Users\\JT\\.nuget\\packages\\discord.net.commands\\3.8.1\\discord.net.commands.3.8.1.nupkg.sha512",

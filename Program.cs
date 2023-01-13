@@ -105,6 +105,11 @@ namespace DiscordLeagueBot
                      .WithName("match-v5-test")
                      .WithDescription("match v5 test")
                      .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("insult-test")
+                     .WithDescription("Insult test")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
                  );
              guildCommands.Add(guildDevelopmentSubCommandGroup);
 
@@ -324,6 +329,12 @@ namespace DiscordLeagueBot
             {
                 case "match-v5-test":
                     response = "It works";
+                    break;
+                
+                case "insult-test":
+                    var insultGenerator = new InsultGenerator();
+                    await insultGenerator.UpdateAdjectives();
+                    response = "Test, check console";
                     break;
             }
 
