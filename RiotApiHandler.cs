@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,7 +11,7 @@ namespace DiscordLeagueBot;
 public class RiotApiCallHandler
 {
     private HttpClient _httpClient= new();
-    private string _riotApiKey = "RGAPI-530cd134-3d39-49cd-bebd-ee2ed67da6eb";
+    private string _riotApiKey = "riotApiKey";
     
     public RiotApiCallHandler()
     {
@@ -20,6 +21,19 @@ public class RiotApiCallHandler
     public RiotApiCallHandler(string apiKey)
     {
         _riotApiKey = apiKey;
+    }
+
+    public async Task UpdateApiKey(string filePath)
+    {
+        if (File.Exists(filePath))
+        {
+            var text = await File.ReadAllLinesAsync(filePath);
+            _riotApiKey = text[1];
+        }
+        else
+        {
+            Console.WriteLine($"Failed to find file at: '{filePath}'");
+        }
     }
 
     public async Task<string> GetJsonStringFromUrlAsync(string url)

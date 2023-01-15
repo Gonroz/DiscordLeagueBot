@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -16,8 +17,15 @@ namespace DiscordLeagueBot
         private DiscordSocketClient? _client;
         private ISocketMessageChannel? _channel;
 
-        private RiotApiCallHandler? _riotApiCallHandler = new();
-        private SQLiteDatabaseHandler? _databaseHandler = new();
+        private RiotApiCallHandler _riotApiCallHandler = new();
+        private SQLiteDatabaseHandler _databaseHandler = new();
+
+        private InsultGenerator _insultGenerator = new();
+        
+        private string token = "token";
+        private string discordTokenPath = "ApiKeys/DiscordApiKey.txt";
+
+        private string riotApiKeyPath = "ApiKeys/RiotApiKey.txt";
 
         public async Task MainAsync()
         {
@@ -25,10 +33,12 @@ namespace DiscordLeagueBot
             _client.Log += Log;
             _client.Ready += ClientReady;
             _client.SlashCommandExecuted += SlashCommandHandler;
-
-            var token = "MTAzMDAwNzIyNzA4MTMwNjE3Mg.G8JNY7.lXbIOxD6PwOhNs7ERlO6DDCSv_xApoc2pIOV5g";
-            //var riotApiKey = "RGAPI-9831f7f3-e445-4fc0-9a0f-61fc864c3993";
-            //_riotApiCallHandler = new RiotApiCallHandler(riotApiKey);
+            
+            // InsultGenerator type stuff
+            await _insultGenerator.UpdateAdjectives();
+            await _insultGenerator.UpdateNouns();
+            
+            await UpdateApiKeys();
 
             var databaseLocation = "./Database.db";
             _databaseHandler = new SQLiteDatabaseHandler(databaseLocation);
@@ -43,7 +53,7 @@ namespace DiscordLeagueBot
                 if (_channel != null)
                 {
                     //Console.WriteLine(channel.Name);
-                    await _channel.SendMessageAsync("Aw fugg baby I'm wet");
+                    await _channel.SendMessageAsync("Running");
                 }
             }
             
@@ -55,6 +65,21 @@ namespace DiscordLeagueBot
         {
             Console.WriteLine(message.ToString());
             return Task.CompletedTask;
+        }
+
+        private async Task UpdateApiKeys()
+        {
+            if (File.Exists(discordTokenPath))
+            {
+                var text = await File.ReadAllLinesAsync(discordTokenPath);
+                token = text[1];
+            }
+            else
+            {
+                Console.WriteLine($"File not found at: {discordTokenPath}");
+            }
+
+            await _riotApiCallHandler.UpdateApiKey(riotApiKeyPath);
         }
 
         private async Task ClientReady()
@@ -332,9 +357,7 @@ namespace DiscordLeagueBot
                     break;
                 
                 case "insult-test":
-                    var insultGenerator = new InsultGenerator();
-                    await insultGenerator.UpdateAdjectives();
-                    response = "Test, check console";
+                    response = await _insultGenerator.GenerateRandomInsult();
                     break;
             }
 

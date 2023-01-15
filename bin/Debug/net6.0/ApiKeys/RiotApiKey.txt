@@ -1,0 +1,2 @@
+Put your riot api key on the next line.
+Riot api key here

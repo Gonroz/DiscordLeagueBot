@@ -25,7 +25,7 @@ public class InsultGenerator
     // Generates a random insult
     public async Task<string> GenerateRandomInsult()
     {
-        return $"You are a {adjectives[rand.Next(0, adjectives.Count)]} {nouns[rand.Next(0, nouns.Count)]}";
+        return $"You are a {adjectives[rand.Next(0, adjectives.Count)]} {nouns[rand.Next(0, nouns.Count)]}.";
     }
 
     // Add all words in the file path to the adjectives list
