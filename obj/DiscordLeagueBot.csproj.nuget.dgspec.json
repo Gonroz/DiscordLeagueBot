@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\JT\\RiderProjects\\DiscordPingPongBot\\DiscordLeagueBot\\DiscordLeagueBot.csproj": {}
+    "C:\\Users\\JT\\RiderProjects\\DiscordLeagueBot\\DiscordLeagueBot\\DiscordLeagueBot.csproj": {}
   },
   "projects": {
-    "C:\\Users\\JT\\RiderProjects\\DiscordPingPongBot\\DiscordLeagueBot\\DiscordLeagueBot.csproj": {
+    "C:\\Users\\JT\\RiderProjects\\DiscordLeagueBot\\DiscordLeagueBot\\DiscordLeagueBot.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\JT\\RiderProjects\\DiscordPingPongBot\\DiscordLeagueBot\\DiscordLeagueBot.csproj",
+        "projectUniqueName": "C:\\Users\\JT\\RiderProjects\\DiscordLeagueBot\\DiscordLeagueBot\\DiscordLeagueBot.csproj",
         "projectName": "DiscordLeagueBot",
-        "projectPath": "C:\\Users\\JT\\RiderProjects\\DiscordPingPongBot\\DiscordLeagueBot\\DiscordLeagueBot.csproj",
+        "projectPath": "C:\\Users\\JT\\RiderProjects\\DiscordLeagueBot\\DiscordLeagueBot\\DiscordLeagueBot.csproj",
         "packagesPath": "C:\\Users\\JT\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\JT\\RiderProjects\\DiscordPingPongBot\\DiscordLeagueBot\\obj\\",
+        "outputPath": "C:\\Users\\JT\\RiderProjects\\DiscordLeagueBot\\DiscordLeagueBot\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\JT\\AppData\\Roaming\\NuGet\\NuGet.Config",

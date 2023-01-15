@@ -1,0 +1,2 @@
+Put your discord api key/token on the next line.
+Disccord api key here

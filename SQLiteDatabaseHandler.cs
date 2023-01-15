@@ -126,8 +126,8 @@ public class SQLiteDatabaseHandler
                         Console.WriteLine("Transaction is open");
                         var insertCommand = connection.CreateCommand();
                         // $"INSERT INTO users (discord_id, discord_username) VALUES ({discordID}, {discordUsername});"
-                        commandText =
-                            $@"INSERT INTO users (discord_id,discord_username, riot_puuid, riot_username)
+                        commandText = $@"
+                            INSERT INTO users (discord_id,discord_username, riot_puuid, riot_username)
                             VALUES ({discordId},'{discordUsername}', '{riotPuuid}', '{riotUsername}');";
                         Console.WriteLine(commandText);
                         insertCommand.CommandText = commandText;
@@ -137,12 +137,6 @@ public class SQLiteDatabaseHandler
 
                         transaction.Commit();
                         Console.WriteLine("Transaction committed");
-                    /*}
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message + " inner");
-                        throw new Exception(e.Message);
-                    }*/
                 }
             }
             catch (Exception e)
@@ -153,9 +147,8 @@ public class SQLiteDatabaseHandler
         }
     }
 
-    public async Task<string> GetPuuidFromDatabaseWithDiscordUser(IUser user)
+    public async Task<string> GetPuuidFromDatabaseWithDiscordId(ulong discordId)
     {
-        var discordId = user.Id;
         var puuid = "";
         try
         {
@@ -180,5 +173,30 @@ public class SQLiteDatabaseHandler
             throw new Exception("Failure to get puuid.", e);
         }
         return puuid;
+    }
+
+    public async Task WriteMatchIdHistoryToDatabaseWithDiscordId(ulong discordId)
+    {
+        var commandText = "";
+        var puuid = await GetPuuidFromDatabaseWithDiscordId(discordId);
+        var matchIdHistory = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
+        try
+        {
+            await using var connection = new SqliteConnection(_connectionString.ConnectionString);
+            connection.Open();
+            await using var transaction = connection.BeginTransaction();
+            var insertCommand = connection.CreateCommand();
+            commandText = $@"UPDATE users
+                            SET match_id_history = '{matchIdHistory}'
+                            WHERE discord_id = '{discordId}';";
+            insertCommand.CommandText = commandText;
+            insertCommand.ExecuteNonQuery();
+            transaction.Commit();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw new Exception("Failed to write match ID history to database", e);
+        }
     }
 }

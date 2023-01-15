@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -10,7 +11,7 @@ namespace DiscordLeagueBot;
 public class RiotApiCallHandler
 {
     private HttpClient _httpClient= new();
-    private string _riotApiKey = "RGAPI-d847892c-334e-4011-9cb2-83d6a0e2cf89";
+    private string _riotApiKey = "riotApiKey";
     
     public RiotApiCallHandler()
     {
@@ -20,6 +21,19 @@ public class RiotApiCallHandler
     public RiotApiCallHandler(string apiKey)
     {
         _riotApiKey = apiKey;
+    }
+
+    public async Task UpdateApiKey(string filePath)
+    {
+        if (File.Exists(filePath))
+        {
+            var text = await File.ReadAllLinesAsync(filePath);
+            _riotApiKey = text[1];
+        }
+        else
+        {
+            Console.WriteLine($"Failed to find file at: '{filePath}'");
+        }
     }
 
     public async Task<string> GetJsonStringFromUrlAsync(string url)
@@ -72,12 +86,29 @@ public class RiotApiCallHandler
         }
     }
 
-    public async Task<string[]> GetMatchIdHistory(string puuid)
+    public async Task<string> GetMatchIdHistoryWithPuuid(string puuid)
     {
         try
         {
-            var url = $"https://na1.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids";
+            var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=20&api_key={_riotApiKey}";
             var jsonText = await GetJsonStringFromUrlAsync(url);
+            Console.WriteLine(jsonText);
+            return jsonText;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw new Exception("Failed to get match id history.", e);
+        }
+    }
+    
+    public async Task<string[]> GetMatchIdHistoryStringArrayWithPuuid(string puuid)
+    {
+        try
+        {
+            var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=20&api_key={_riotApiKey}";
+            var jsonText = await GetJsonStringFromUrlAsync(url);
+            Console.WriteLine(jsonText);
             var matchIdArray = JsonSerializer.Deserialize<string[]>(jsonText);
             return matchIdArray;
         }
@@ -85,6 +116,22 @@ public class RiotApiCallHandler
         {
             Console.WriteLine(e);
             throw new Exception("Failed to get match id history.", e);
+        }
+    }
+
+    public async Task<string> GetMatchV5JsonWithMatchId(string matchId)
+    {
+        try
+        {
+            var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/{matchId}?api_key={_riotApiKey}";
+            var jsonText = await GetJsonStringFromUrlAsync(url);
+            Console.WriteLine(jsonText);
+            return jsonText;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw new Exception("Failed to get match v5.", e);
         }
     }
 }

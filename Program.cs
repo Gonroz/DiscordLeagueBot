@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -16,8 +17,15 @@ namespace DiscordLeagueBot
         private DiscordSocketClient? _client;
         private ISocketMessageChannel? _channel;
 
-        private RiotApiCallHandler? _riotApiCallHandler = new();
-        private SQLiteDatabaseHandler? _databaseHandler = new();
+        private RiotApiCallHandler _riotApiCallHandler = new();
+        private SQLiteDatabaseHandler _databaseHandler = new();
+
+        private InsultGenerator _insultGenerator = new();
+        
+        private string token = "token";
+        private string discordTokenPath = "ApiKeys/DiscordApiKey.txt";
+
+        private string riotApiKeyPath = "ApiKeys/RiotApiKey.txt";
 
         public async Task MainAsync()
         {
@@ -25,10 +33,12 @@ namespace DiscordLeagueBot
             _client.Log += Log;
             _client.Ready += ClientReady;
             _client.SlashCommandExecuted += SlashCommandHandler;
-
-            var token = "MTAzMDAwNzIyNzA4MTMwNjE3Mg.G8JNY7.lXbIOxD6PwOhNs7ERlO6DDCSv_xApoc2pIOV5g";
-            //var riotApiKey = "RGAPI-9831f7f3-e445-4fc0-9a0f-61fc864c3993";
-            //_riotApiCallHandler = new RiotApiCallHandler(riotApiKey);
+            
+            // InsultGenerator type stuff
+            await _insultGenerator.UpdateAdjectives();
+            await _insultGenerator.UpdateNouns();
+            
+            await UpdateApiKeys();
 
             var databaseLocation = "./Database.db";
             _databaseHandler = new SQLiteDatabaseHandler(databaseLocation);
@@ -43,7 +53,7 @@ namespace DiscordLeagueBot
                 if (_channel != null)
                 {
                     //Console.WriteLine(channel.Name);
-                    await _channel.SendMessageAsync("Aw fugg baby I'm wet");
+                    await _channel.SendMessageAsync("Running");
                 }
             }
             
@@ -57,13 +67,28 @@ namespace DiscordLeagueBot
             return Task.CompletedTask;
         }
 
+        private async Task UpdateApiKeys()
+        {
+            if (File.Exists(discordTokenPath))
+            {
+                var text = await File.ReadAllLinesAsync(discordTokenPath);
+                token = text[1];
+            }
+            else
+            {
+                Console.WriteLine($"File not found at: {discordTokenPath}");
+            }
+
+            await _riotApiCallHandler.UpdateApiKey(riotApiKeyPath);
+        }
+
         private async Task ClientReady()
         {
             var applicationCommandProperties = new List<ApplicationCommandProperties>();
             var guildCommands = new List<SlashCommandBuilder>();
             
             ulong developmentGuildId = 468870202491404290; // BotTesting discord
-            var developmentGuild = _client.GetGuild(developmentGuildId);
+            //var developmentGuild = _client.GetGuild(developmentGuildId);
             
             // Guild commands
             var guildSummonerNameCommand = new SlashCommandBuilder()
@@ -72,10 +97,10 @@ namespace DiscordLeagueBot
                 .AddOption("summoner-name", ApplicationCommandOptionType.String, "Name of summoner.", isRequired: true);
             guildCommands.Add(guildSummonerNameCommand);
 
-            var guildTestSQLiteCommand = new SlashCommandBuilder()
+            /*var guildTestSQLiteCommand = new SlashCommandBuilder()
                 .WithName("sqlite-test")
                 .WithDescription("Test SQLite");
-            guildCommands.Add(guildTestSQLiteCommand);
+            guildCommands.Add(guildTestSQLiteCommand);*/
 
             var guildRegisterDiscordCommand = new SlashCommandBuilder()
                 .WithName("register-discord")
@@ -88,10 +113,35 @@ namespace DiscordLeagueBot
                 .AddOption("summoner-name", ApplicationCommandOptionType.String, "Name of summoner.", isRequired: true);
             guildCommands.Add(guildRegisterRiotToDiscordCommand);
 
-            var guildGetMatchIdHistory = new SlashCommandBuilder()
+            var guildGetMatchIdHistoryCommand = new SlashCommandBuilder()
                 .WithName("get-match-id-history")
                 .WithDescription("Get match id history of your account.");
-            guildCommands.Add(guildGetMatchIdHistory);
+            guildCommands.Add(guildGetMatchIdHistoryCommand);
+
+             /*var guildMatchV5TestCommand = new SlashCommandBuilder()
+                .WithName("match-v5-test")
+                .WithDescription("Match V5 Test.");
+            guildCommands.Add(guildMatchV5TestCommand);*/
+
+             var guildDevelopmentSubCommandGroup = new SlashCommandBuilder()
+                 .WithName("development")
+                 .WithDescription("Development sub command group")
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("match-v5-test")
+                     .WithDescription("match v5 test")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("insult-test")
+                     .WithDescription("Insult test")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
+                 );
+             guildCommands.Add(guildDevelopmentSubCommandGroup);
+
+            /*var guildTestCommand = new SlashCommandBuilder()
+                .WithName("test")
+                .WithDescription("Test.");
+            guildCommands.Add(guildTestCommand);*/
 
             // Global commands
             var globalCommand = new SlashCommandBuilder()
@@ -134,11 +184,12 @@ namespace DiscordLeagueBot
                 await _client.BulkOverwriteGlobalApplicationCommandsAsync(applicationCommandProperties.ToArray());
                 
                 // Guild commands
-                await developmentGuild.DeleteApplicationCommandsAsync();
+                await UpdateGuildCommands(developmentGuildId, guildCommands);
+                /*await developmentGuild.DeleteApplicationCommandsAsync();
                 foreach (var command in guildCommands)
                 {
                     await developmentGuild.CreateApplicationCommandAsync(command.Build());
-                }
+                }*/
                 //await developmentGuild.CreateApplicationCommandAsync(guildSummonerNameCommand.Build());
             }
             catch(HttpException exception)
@@ -153,9 +204,27 @@ namespace DiscordLeagueBot
             }
         }
 
+        private async Task UpdateGuildCommands(ulong guildId, List<SlashCommandBuilder> guildCommands)
+        {
+            var developmentGuild = _client.GetGuild(guildId);
+            await developmentGuild.DeleteApplicationCommandsAsync();
+            foreach (var command in guildCommands)
+            {
+                await developmentGuild.CreateApplicationCommandAsync(command.Build());
+            }
+        }
+
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
             var response = "Generic message response";
+
+            switch (command.Data.Name)
+            {
+                case "development":
+                    await HandleDevelopmentCommand(command);
+                    break;
+            }
+            
             switch (command.Data.Name)
             {
                 case "ping":
@@ -202,12 +271,28 @@ namespace DiscordLeagueBot
                 case "get-match-id-history":
                     try
                     {
-                        var puuid = await _databaseHandler.GetPuuidFromDatabaseWithDiscordUser(command.User);
-                        var idHistory = await _riotApiCallHandler.GetMatchIdHistory(puuid);
+                        var puuid = await _databaseHandler.GetPuuidFromDatabaseWithDiscordId(command.User.Id);
+                        var idHistory = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
+                        await _databaseHandler.WriteMatchIdHistoryToDatabaseWithDiscordId(command.User.Id);
+                        response = "";
                         foreach (var match in idHistory)
                         {
                             response += match;
                         }
+                    }
+                    catch (Exception e)
+                    {
+                        response = e.InnerException == null
+                            ? $"Exception: {e.Message}"
+                            : $"Exception: {e.Message} Inner: {e.InnerException.Message}";
+                    }
+                    await command.RespondAsync(response);
+                    break;
+                
+                case "match-v5-test":
+                    try
+                    {
+                        response = await _riotApiCallHandler.GetMatchV5JsonWithMatchId("NA1_4487433350");
                     }
                     catch (Exception e)
                     {
@@ -257,6 +342,26 @@ namespace DiscordLeagueBot
             // If no other specialties for a command happens
             //else
                 //await command.RespondAsync($"You executed {command.Data.Name} GENERIC RESPONSE");
+        }
+
+        private async Task HandleDevelopmentCommand(SocketSlashCommand command)
+        {
+            var response = "HandleDevelopmentCommand response";
+
+            var specificCommandName = command.Data.Options.First().Name;
+
+            switch (specificCommandName)
+            {
+                case "match-v5-test":
+                    response = "It works";
+                    break;
+                
+                case "insult-test":
+                    response = await _insultGenerator.GenerateRandomInsult();
+                    break;
+            }
+
+            await command.RespondAsync(response);
         }
     }
 }
