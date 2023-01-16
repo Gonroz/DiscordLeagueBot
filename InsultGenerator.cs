@@ -37,6 +37,24 @@ public class InsultGenerator
     }
 
     /// <summary>
+    /// Generates a random insult against the person with 'name'.
+    /// </summary>
+    /// <param name="name">The name of the person to insult.</param>
+    /// <returns>A randomly generated insult.</returns>
+    public async Task<string> GenerateRandomInsult(string name)
+    {
+        var sentence = _insultSentencesWithName[_rand.Next(0, _insultSentencesWithName.Count)];
+        var adjective = _adjectives[_rand.Next(0, _adjectives.Count)];
+        var noun = _nouns[_rand.Next(0, _nouns.Count)];
+
+        sentence = sentence.Replace("[name]", name);
+        sentence = sentence.Replace("[adj]", adjective);
+        sentence = sentence.Replace("[noun]", noun);
+        
+        return sentence;
+    }
+
+    /// <summary>
     /// Update all word list files at once.
     /// </summary>
     public async Task UpdateWordListFiles()
@@ -44,16 +62,6 @@ public class InsultGenerator
         await UpdateAdjectives();
         await UpdateNouns();
         await UpdateNamedSentenceStructures();
-    }
-
-    /// <summary>
-    /// Generates a random insult against the person with 'name'.
-    /// </summary>
-    /// <param name="name">The name of the person to insult.</param>
-    /// <returns>A randomly generated insult.</returns>
-    public async Task<string> GenerateRandomInsult(string name)
-    {
-        return $"{name} is a {_adjectives[_rand.Next(0, _adjectives.Count)]} {_nouns[_rand.Next(0, _nouns.Count)]}.";
     }
 
     /// <summary>
