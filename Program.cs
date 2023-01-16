@@ -14,7 +14,7 @@ namespace DiscordLeagueBot
         public static void Main(string[] args)
         => new Program().MainAsync().GetAwaiter().GetResult();
 
-        private DiscordSocketClient? _client;
+        private DiscordSocketClient _client = new();
         private ISocketMessageChannel? _channel;
 
         private RiotApiCallHandler _riotApiCallHandler = new();
@@ -22,14 +22,14 @@ namespace DiscordLeagueBot
 
         private InsultGenerator _insultGenerator = new();
         
-        private string token = "token";
-        private string discordTokenPath = "ApiKeys/DiscordApiKey.txt";
+        private string _token = "token";
+        private string _discordTokenPath = "ApiKeys/DiscordApiKey.txt";
 
-        private string riotApiKeyPath = "ApiKeys/RiotApiKey.txt";
+        private string _riotApiKeyPath = "ApiKeys/RiotApiKey.txt";
 
         public async Task MainAsync()
         {
-            _client = new DiscordSocketClient();
+            //_client = new DiscordSocketClient();
             _client.Log += Log;
             _client.Ready += ClientReady;
             _client.SlashCommandExecuted += SlashCommandHandler;
@@ -43,7 +43,7 @@ namespace DiscordLeagueBot
             var databaseLocation = "./Database.db";
             _databaseHandler = new SQLiteDatabaseHandler(databaseLocation);
 
-            await _client.LoginAsync(TokenType.Bot, token);
+            await _client.LoginAsync(TokenType.Bot, _token);
             await _client.StartAsync();
 
             while (_client.Status == UserStatus.Online)
@@ -69,17 +69,17 @@ namespace DiscordLeagueBot
 
         private async Task UpdateApiKeys()
         {
-            if (File.Exists(discordTokenPath))
+            if (File.Exists(_discordTokenPath))
             {
-                var text = await File.ReadAllLinesAsync(discordTokenPath);
-                token = text[1];
+                var text = await File.ReadAllLinesAsync(_discordTokenPath);
+                _token = text[1];
             }
             else
             {
-                Console.WriteLine($"File not found at: {discordTokenPath}");
+                Console.WriteLine($"File not found at: {_discordTokenPath}");
             }
 
-            await _riotApiCallHandler.UpdateApiKey(riotApiKeyPath);
+            await _riotApiCallHandler.UpdateApiKey(_riotApiKeyPath);
         }
 
         private async Task ClientReady()
@@ -357,7 +357,8 @@ namespace DiscordLeagueBot
                     break;
                 
                 case "insult-test":
-                    response = await _insultGenerator.GenerateRandomInsult();
+                    //response = await _insultGenerator.GenerateRandomInsult();
+                    response = await _insultGenerator.GenerateRandomInsult(command.User.Mention);
                     break;
             }
 

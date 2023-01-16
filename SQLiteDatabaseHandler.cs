@@ -72,6 +72,10 @@ public class SQLiteDatabaseHandler
         return s;
     }
 
+    /// <summary>
+    /// Registers a discord account into the SQLite database.
+    /// </summary>
+    /// <param name="user">The discord user IUser that will be added.</param>
     public async Task RegisterDiscordAccountToDatabase(IUser user)
     {
         var discordId = user.Id;
@@ -90,7 +94,8 @@ public class SQLiteDatabaseHandler
                 Console.WriteLine("Transaction is open");
                 var insertCommand = connection.CreateCommand();
                 // $"INSERT INTO users (discord_id, discord_username) VALUES ({discordID}, {discordUsername});"
-                commandText = $"INSERT INTO users (discord_id,discord_username) VALUES ({discordId},'{discordUsername}');";
+                commandText = $@"INSERT INTO users (discord_id,discord_username)
+                                VALUES ({discordId},'{discordUsername}');";
                 Console.WriteLine(commandText);
                 insertCommand.CommandText = commandText;
                 insertCommand.ExecuteNonQuery();
@@ -103,6 +108,12 @@ public class SQLiteDatabaseHandler
         }
     }
 
+    /// <summary>
+    /// Registers a discord account and riot account into the SQLite database. They are linked together.
+    /// </summary>
+    /// <param name="user">The discord user being added.</param>
+    /// <param name="riotUsername">The riot username being added.</param>
+    /// <exception cref="Exception">Throws whatever exception that may occur.</exception>
     public async Task RegisterDiscordAndRiotAccount(IUser user, string riotUsername)
     {
         var discordId = user.Id;
@@ -147,6 +158,12 @@ public class SQLiteDatabaseHandler
         }
     }
 
+    /// <summary>
+    /// Get the unique riot puuid from the database with a discord id.
+    /// </summary>
+    /// <param name="discordId">The discord account id.</param>
+    /// <returns>A string of the riot puuid.</returns>
+    /// <exception cref="Exception">Throws the exception that caused the puuid to fail to get.</exception>
     public async Task<string> GetPuuidFromDatabaseWithDiscordId(ulong discordId)
     {
         var puuid = "";
@@ -175,6 +192,11 @@ public class SQLiteDatabaseHandler
         return puuid;
     }
 
+    /// <summary>
+    /// Writes a string of the match id history into the database for the account with the discord id.
+    /// </summary>
+    /// <param name="discordId">The discord id to add the match history to.</param>
+    /// <exception cref="Exception">Throws whatever exception may occur.</exception>
     public async Task WriteMatchIdHistoryToDatabaseWithDiscordId(ulong discordId)
     {
         var commandText = "";

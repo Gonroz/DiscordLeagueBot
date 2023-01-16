@@ -1,0 +1,3 @@
+[name] is a(n) [adj] [noun].
+[name] is nothing but a(n) [adj] [noun].
+[name], you are a(n) [adj] [noun].

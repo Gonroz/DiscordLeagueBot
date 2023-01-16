@@ -23,6 +23,10 @@ public class RiotApiCallHandler
         _riotApiKey = apiKey;
     }
 
+    /// <summary>
+    /// Update the api key from the file that it is stored in. Make sure the key is on the second line.
+    /// </summary>
+    /// <param name="filePath">The path to the file containing the key.</param>
     public async Task UpdateApiKey(string filePath)
     {
         if (File.Exists(filePath))
@@ -36,6 +40,11 @@ public class RiotApiCallHandler
         }
     }
 
+    /// <summary>
+    /// Returns JSON from the url address.
+    /// </summary>
+    /// <param name="url">The url to get the JSON from.</param>
+    /// <returns>The JSON is the form of a string.</returns>
     public async Task<string> GetJsonStringFromUrlAsync(string url)
     {
         try
@@ -48,8 +57,12 @@ public class RiotApiCallHandler
             return e.Message;
         }
     }
-
-    // Get summoner JSON from summonerV4 on riot developer portal
+    
+    /// <summary>
+    /// Get summoner JSON from summonerV4 on riot developer portal.
+    /// </summary>
+    /// <param name="summonerName">The summoner name you want to get the JSON for.</param>
+    /// <returns>The JSON in the form of a string.</returns>
     public async Task<string> GetSummonerByNameAsync(string summonerName)
     {
         var response = "Response.";
@@ -68,7 +81,11 @@ public class RiotApiCallHandler
         return response;
     }
 
-    // Get puuid from a riot username
+    /// <summary>
+    /// Get puuid from a summoner name.
+    /// </summary>
+    /// <param name="summonerName">The summoner name you want to get the puuid for.</param>
+    /// <returns>The puuid in the form of a string.</returns>
     public async Task<string> GetPuuidFromUsername(string summonerName)
     {
         Console.WriteLine(summonerName);
@@ -86,6 +103,12 @@ public class RiotApiCallHandler
         }
     }
 
+    /// <summary>
+    /// Get the match history JSON from a puuid.
+    /// </summary>
+    /// <param name="puuid">The puuid you want to get the match history for.</param>
+    /// <returns>The JSON in the form of a string.</returns>
+    /// <exception cref="Exception">Throwws whatever exception may occur.</exception>
     public async Task<string> GetMatchIdHistoryWithPuuid(string puuid)
     {
         try
@@ -119,6 +142,12 @@ public class RiotApiCallHandler
         }
     }
 
+    /// <summary>
+    /// Get matchV5 JSON from a certain match id.
+    /// </summary>
+    /// <param name="matchId">The particular match you want to get the JSON for.</param>
+    /// <returns>The match JSON in the form of a string.</returns>
+    /// <exception cref="Exception">Throws whatever exception may occur.</exception>
     public async Task<string> GetMatchV5JsonWithMatchId(string matchId)
     {
         try
