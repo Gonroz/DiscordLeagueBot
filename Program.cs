@@ -35,8 +35,7 @@ namespace DiscordLeagueBot
             _client.SlashCommandExecuted += SlashCommandHandler;
             
             // InsultGenerator type stuff
-            await _insultGenerator.UpdateAdjectives();
-            await _insultGenerator.UpdateNouns();
+            await _insultGenerator.UpdateWordListFiles();
             
             await UpdateApiKeys();
 

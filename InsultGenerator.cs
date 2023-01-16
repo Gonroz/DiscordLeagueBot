@@ -11,9 +11,11 @@ public class InsultGenerator
 {
     private string _adjectivesFilePath = @"WordListFiles\adjectives.txt";
     private string _nounsFilePath = @"WordListFiles\nouns.txt";
+    private string _insultSentencesWithNameFilePath = @"WordListFiles\InsultSentenceStructuresWithName.txt";
     
-    List<string> _adjectives = new();
+    private List<string> _adjectives = new();
     private List<string> _nouns = new();
+    private List<string> _insultSentencesWithName = new();
 
     private Random _rand = new();
 
@@ -32,6 +34,16 @@ public class InsultGenerator
     public async Task<string> GenerateRandomInsult()
     {
         return $"You are a {_adjectives[_rand.Next(0, _adjectives.Count)]} {_nouns[_rand.Next(0, _nouns.Count)]}.";
+    }
+
+    /// <summary>
+    /// Update all word list files at once.
+    /// </summary>
+    public async Task UpdateWordListFiles()
+    {
+        await UpdateAdjectives();
+        await UpdateNouns();
+        await UpdateNamedSentenceStructures();
     }
 
     /// <summary>
@@ -82,6 +94,25 @@ public class InsultGenerator
         {
             Console.WriteLine($"File not found: {_nounsFilePath}");
             throw new Exception($"File not found at: {_nounsFilePath}");
+        }
+    }
+
+    /// <summary>
+    /// Update sentence structures that use a name at the front.
+    /// </summary>
+    /// <exception cref="Exception">Throws an error if the file is not found.</exception>
+    public async Task UpdateNamedSentenceStructures()
+    {
+        if (File.Exists(_insultSentencesWithNameFilePath))
+        {
+            var text = await File.ReadAllLinesAsync(_insultSentencesWithNameFilePath);
+            _insultSentencesWithName = text.ToList();
+            Console.WriteLine("Updated insult sentences with name.");
+        }
+        else
+        {
+            Console.WriteLine($"File not found at: {_insultSentencesWithNameFilePath}");
+            throw new Exception($"File not found at: {_insultSentencesWithNameFilePath}");
         }
     }
 }
