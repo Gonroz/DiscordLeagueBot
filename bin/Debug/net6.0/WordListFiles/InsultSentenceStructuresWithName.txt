@@ -1,3 +1,6 @@
-[name] is a(n) [adj] [noun].
-[name] is nothing but a(n) [adj] [noun].
-[name], you are a(n) [adj] [noun].
+[name] is a [adj] [noun].
+[name] is nothing but a [adj] [noun].
+[name] you are a [adj] [noun].
+[name] you are nothing but a [adj] [noun].
+[name] reminds me of a [adj] [noun].
+[name]'s mom is a [adj] [noun].

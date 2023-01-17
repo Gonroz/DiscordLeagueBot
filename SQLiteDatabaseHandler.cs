@@ -173,7 +173,9 @@ public class SQLiteDatabaseHandler
             {
                 connection.Open();
                 var selectPuuidCommand = connection.CreateCommand();
-                selectPuuidCommand.CommandText = $@"SELECT riot_puuid FROM users WHERE discord_id = '{discordId}';";
+                selectPuuidCommand.CommandText = $@"SELECT riot_puuid
+                                                    FROM users
+                                                    WHERE discord_id = '{discordId}';";
                 await using (var reader = await selectPuuidCommand.ExecuteReaderAsync())
                 {
                     while (reader.Read())

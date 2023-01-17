@@ -21,6 +21,8 @@ namespace DiscordLeagueBot
         private SQLiteDatabaseHandler _databaseHandler = new();
 
         private InsultGenerator _insultGenerator = new();
+
+        private DiscordBot _discordBot = new();
         
         private string _token = "token";
         private string _discordTokenPath = "ApiKeys/DiscordApiKey.txt";
@@ -133,6 +135,12 @@ namespace DiscordLeagueBot
                  .AddOption(new SlashCommandOptionBuilder()
                      .WithName("insult-test")
                      .WithDescription("Insult test")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("roast")
+                     .WithDescription("Make the bot roast someone.")
+                     .AddOption("user", ApplicationCommandOptionType.User, "User you want to roast", isRequired: true)
                      .WithType(ApplicationCommandOptionType.SubCommand)
                  );
              guildCommands.Add(guildDevelopmentSubCommandGroup);
@@ -358,6 +366,10 @@ namespace DiscordLeagueBot
                 case "insult-test":
                     //response = await _insultGenerator.GenerateRandomInsult();
                     response = await _insultGenerator.GenerateRandomInsult(command.User.Mention);
+                    break;
+                
+                case "roast":
+                    response = await _discordBot.Roast((IUser)command.Data.Options.First().Options.First().Value);
                     break;
             }
 
