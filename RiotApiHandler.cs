@@ -33,6 +33,7 @@ public class RiotApiCallHandler
         {
             var text = await File.ReadAllLinesAsync(filePath);
             _riotApiKey = text[1];
+            Console.WriteLine(_riotApiKey);
         }
         else
         {
@@ -108,14 +109,14 @@ public class RiotApiCallHandler
     /// </summary>
     /// <param name="puuid">The puuid you want to get the match history for.</param>
     /// <returns>The JSON in the form of a string.</returns>
-    /// <exception cref="Exception">Throwws whatever exception may occur.</exception>
+    /// <exception cref="Exception">Throws whatever exception may occur.</exception>
     public async Task<string> GetMatchIdHistoryWithPuuid(string puuid)
     {
         try
         {
             var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=20&api_key={_riotApiKey}";
             var jsonText = await GetJsonStringFromUrlAsync(url);
-            Console.WriteLine(jsonText);
+            //Console.WriteLine(jsonText);
             return jsonText;
         }
         catch (Exception e)
@@ -125,13 +126,13 @@ public class RiotApiCallHandler
         }
     }
     
-    public async Task<string[]> GetMatchIdHistoryStringArrayWithPuuid(string puuid)
+    public async Task<string[]> GetMatchIdHistory(string puuid)
     {
         try
         {
             var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=20&api_key={_riotApiKey}";
             var jsonText = await GetJsonStringFromUrlAsync(url);
-            Console.WriteLine(jsonText);
+            //Console.WriteLine(jsonText);
             var matchIdArray = JsonSerializer.Deserialize<string[]>(jsonText);
             return matchIdArray;
         }
@@ -154,7 +155,7 @@ public class RiotApiCallHandler
         {
             var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/{matchId}?api_key={_riotApiKey}";
             var jsonText = await GetJsonStringFromUrlAsync(url);
-            Console.WriteLine(jsonText);
+            //Console.WriteLine(jsonText);
             return jsonText;
         }
         catch (Exception e)

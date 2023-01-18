@@ -164,7 +164,7 @@ public class SQLiteDatabaseHandler
     /// <param name="discordId">The discord account id.</param>
     /// <returns>A string of the riot puuid.</returns>
     /// <exception cref="Exception">Throws the exception that caused the puuid to fail to get.</exception>
-    public async Task<string> GetPuuidFromDatabaseWithDiscordId(ulong discordId)
+    public async Task<string> GetPuuid(ulong discordId)
     {
         var puuid = "";
         try
@@ -202,7 +202,7 @@ public class SQLiteDatabaseHandler
     public async Task WriteMatchIdHistoryToDatabaseWithDiscordId(ulong discordId)
     {
         var commandText = "";
-        var puuid = await GetPuuidFromDatabaseWithDiscordId(discordId);
+        var puuid = await GetPuuid(discordId);
         var matchIdHistory = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
         try
         {

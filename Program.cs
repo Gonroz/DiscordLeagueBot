@@ -142,6 +142,11 @@ namespace DiscordLeagueBot
                      .WithDescription("Make the bot roast someone.")
                      .AddOption("user", ApplicationCommandOptionType.User, "User you want to roast", isRequired: true)
                      .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("kda-test")
+                     .WithDescription("Testing kda")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
                  );
              guildCommands.Add(guildDevelopmentSubCommandGroup);
 
@@ -257,28 +262,14 @@ namespace DiscordLeagueBot
                     break;
                 
                 case "link-riot-to-discord":
-                    try
-                    {
-                        var summonerName = (string)command.Data.Options.First().Value;
-                        await _databaseHandler.RegisterDiscordAndRiotAccount(command.User, summonerName);
-                        response = $"Added {command.User.Mention} to the database!";
-                        //await _riotApiCallHandler.GetPuuidFromUsername(summonerName);
-                    }
-                    catch (Exception e)
-                    {
-                        response = $"Failed to link riot to discord with error: {e.Message}";
-                        if (e.InnerException != null)
-                        {
-                            response += $" Inner exception: {e.InnerException.Message}";
-                        }
-                    }
+                    response = await _discordBot.LinkRiotToDiscord(command);
                     await command.RespondAsync(response);
                     break;
                 
                 case "get-match-id-history":
                     try
                     {
-                        var puuid = await _databaseHandler.GetPuuidFromDatabaseWithDiscordId(command.User.Id);
+                        var puuid = await _databaseHandler.GetPuuid(command.User.Id);
                         var idHistory = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
                         await _databaseHandler.WriteMatchIdHistoryToDatabaseWithDiscordId(command.User.Id);
                         response = "";
@@ -370,6 +361,10 @@ namespace DiscordLeagueBot
                 
                 case "roast":
                     response = await _discordBot.Roast((IUser)command.Data.Options.First().Options.First().Value);
+                    break;
+                
+                case "kda-test":
+                    response = await _discordBot.ShowKDA();
                     break;
             }
 
