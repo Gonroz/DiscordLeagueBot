@@ -23,7 +23,7 @@ public class MatchV5
 
 public class MatchV5Metadata
 {
-    //public string matchId { get; set; }
+    public string matchId { get; set; }
     //public string[] participants { get; set; }
     //public MatchV5Info info { get; set; }
 }

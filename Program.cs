@@ -364,7 +364,7 @@ namespace DiscordLeagueBot
                     break;
                 
                 case "kda-test":
-                    response = await _discordBot.ShowKDA();
+                    response = $"{await _discordBot.GetMatchKda(command.User.Id, "NA1_4487433350")}";
                     break;
             }
 

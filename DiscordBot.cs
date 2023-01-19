@@ -42,6 +42,11 @@ public class DiscordBot
         return await _insultGenerator.GenerateRandomInsult(user.Mention);
     }
 
+    /// <summary>
+    /// Link their riot account to their discord account.
+    /// </summary>
+    /// <param name="command">The slash command that was used.</param>
+    /// <returns>A response saying either it was successful or that an error has occured.</returns>
     public async Task<string> LinkRiotToDiscord(SocketSlashCommand command)
     {
         var response = "";
@@ -63,7 +68,7 @@ public class DiscordBot
         return response;
     }
 
-    public async Task<string> ShowKDA()
+    public async Task<string> ShowKDA(ulong discordId)
     {
         var response = "";
 
@@ -72,6 +77,20 @@ public class DiscordBot
             var jsonText = await _riotApiCallHandler.GetMatchV5JsonWithMatchId("NA1_4487433350");
             MatchV5? match = JsonSerializer.Deserialize<MatchV5>(jsonText);
             response = match?.info.gameMode ?? "null";
+
+            await _databaseHandler.WriteMatchIdHistoryToDatabaseWithDiscordId(discordId);
+            var puuid = await _databaseHandler.GetPuuid(discordId);
+            foreach (var participant in match.info.participants)
+            {
+                Console.WriteLine(participant.puuid);
+                if (participant.puuid == puuid)
+                {
+                    Console.WriteLine("match");
+                    double kills = participant.kills;
+                    double deaths = participant.deaths;
+                    return (kills / deaths).ToString();
+                }
+            }
         }
         catch (Exception e)
         {
@@ -80,5 +99,41 @@ public class DiscordBot
         }
 
         return response;
+    }
+
+    /// <summary>
+    /// Get kda of a specific player in a match.
+    /// </summary>
+    /// <param name="matchId">The id of the match.</param>
+    /// <param name="discordId">The discord id of the player.</param>
+    /// <returns>Their kda. Returns -1 if an error occured.</returns>
+    public async Task<double> GetMatchKda(ulong discordId, string matchId)
+    {
+        try
+        {
+            var jsonText = await _riotApiCallHandler.GetMatchV5JsonWithMatchId(matchId);
+            var puuid = await _databaseHandler.GetPuuid(discordId);
+            
+            MatchV5 match = JsonSerializer.Deserialize<MatchV5>(jsonText);
+
+            foreach (var participant in match.info.participants)
+            {
+                if (participant.puuid == puuid)
+                {
+                    double kills = participant.kills;
+                    double deaths = participant.deaths;
+                    double assists = participant.assists;
+                    double kda = deaths != 0 ? (kills + assists) / deaths : kills + assists;
+                    return kda;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
+        return -1;
     }
 }
