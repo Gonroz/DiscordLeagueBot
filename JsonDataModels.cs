@@ -32,6 +32,7 @@ public class MatchV5Info
 {
     public string? gameMode { get; set; }
     public MatchV5Participant[]? participants { get; set; }
+    public string? gameType { get; set; }
 }
 
 public class MatchV5Participant

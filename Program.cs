@@ -20,7 +20,7 @@ namespace DiscordLeagueBot
         private RiotApiCallHandler _riotApiCallHandler = new();
         private SQLiteDatabaseHandler _databaseHandler = new();
 
-        private InsultGenerator _insultGenerator = new();
+        //private InsultGenerator _insultGenerator = new();
 
         private DiscordBot _discordBot = new();
         
@@ -37,12 +37,15 @@ namespace DiscordLeagueBot
             _client.SlashCommandExecuted += SlashCommandHandler;
             
             // InsultGenerator type stuff
-            await _insultGenerator.UpdateWordListFiles();
+            //await _insultGenerator.UpdateWordListFiles();
             
             await UpdateApiKeys();
 
             var databaseLocation = "./Database.db";
             _databaseHandler = new SQLiteDatabaseHandler(databaseLocation);
+            
+            await _discordBot.Start();
+            await _databaseHandler.Start();
 
             await _client.LoginAsync(TokenType.Bot, _token);
             await _client.StartAsync();
@@ -80,7 +83,7 @@ namespace DiscordLeagueBot
                 Console.WriteLine($"File not found at: {_discordTokenPath}");
             }
 
-            await _riotApiCallHandler.UpdateApiKey(_riotApiKeyPath);
+            //await _riotApiCallHandler.UpdateApiKey(_riotApiKeyPath);
         }
 
         private async Task ClientReady()
@@ -146,6 +149,11 @@ namespace DiscordLeagueBot
                  .AddOption(new SlashCommandOptionBuilder()
                      .WithName("kda-test")
                      .WithDescription("Testing kda")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("update-match-history")
+                     .WithDescription("Update match history.")
                      .WithType(ApplicationCommandOptionType.SubCommand)
                  );
              guildCommands.Add(guildDevelopmentSubCommandGroup);
@@ -271,7 +279,7 @@ namespace DiscordLeagueBot
                     {
                         var puuid = await _databaseHandler.GetPuuid(command.User.Id);
                         var idHistory = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
-                        await _databaseHandler.WriteMatchIdHistoryToDatabaseWithDiscordId(command.User.Id);
+                        await _databaseHandler.WriteMatchIdHistory(command.User.Id);
                         response = "";
                         foreach (var match in idHistory)
                         {
@@ -356,7 +364,8 @@ namespace DiscordLeagueBot
                 
                 case "insult-test":
                     //response = await _insultGenerator.GenerateRandomInsult();
-                    response = await _insultGenerator.GenerateRandomInsult(command.User.Mention);
+                    //response = await _insultGenerator.GenerateRandomInsult(command.User.Mention);
+                    response = "no longer a thing";
                     break;
                 
                 case "roast":
@@ -365,6 +374,11 @@ namespace DiscordLeagueBot
                 
                 case "kda-test":
                     response = $"{await _discordBot.GetMatchKda(command.User.Id, "NA1_4487433350")}";
+                    break;
+                
+                case "update-match-history":
+                    //response = await _discordBot.UpdateMatchHistory(command.User.Id);
+                    response = await _discordBot.UpdateMatchHistory(command.User.Id);
                     break;
             }
 

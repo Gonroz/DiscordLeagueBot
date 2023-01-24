@@ -11,14 +11,20 @@ public class DiscordBot
 {
     private InsultGenerator _insultGenerator = new();
     private RiotApiCallHandler _riotApiCallHandler = new();
-    private SQLiteDatabaseHandler _databaseHandler;
+    private SQLiteDatabaseHandler _databaseHandler = new();
 
     public DiscordBot()
     {
-        _insultGenerator.UpdateWordListFiles();
+    }
 
-        _riotApiCallHandler.UpdateApiKey(@"ApiKeys\RiotApiKey.txt");
+    public async Task Start()
+    {
+        await _insultGenerator.UpdateWordListFiles();
+        
+        //await _riotApiCallHandler.UpdateApiKey("ApiKeys/RiotApiKey.txt");
 
+        await _databaseHandler.Start();
+        
         var databaseLocation = "./Database.db";
         _databaseHandler = new SQLiteDatabaseHandler(databaseLocation);
     }
@@ -68,39 +74,6 @@ public class DiscordBot
         return response;
     }
 
-    public async Task<string> ShowKDA(ulong discordId)
-    {
-        var response = "";
-
-        try
-        {
-            var jsonText = await _riotApiCallHandler.GetMatchV5JsonWithMatchId("NA1_4487433350");
-            MatchV5? match = JsonSerializer.Deserialize<MatchV5>(jsonText);
-            response = match?.info.gameMode ?? "null";
-
-            await _databaseHandler.WriteMatchIdHistoryToDatabaseWithDiscordId(discordId);
-            var puuid = await _databaseHandler.GetPuuid(discordId);
-            foreach (var participant in match.info.participants)
-            {
-                Console.WriteLine(participant.puuid);
-                if (participant.puuid == puuid)
-                {
-                    Console.WriteLine("match");
-                    double kills = participant.kills;
-                    double deaths = participant.deaths;
-                    return (kills / deaths).ToString();
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-
-        return response;
-    }
-
     /// <summary>
     /// Get kda of a specific player in a match.
     /// </summary>
@@ -114,7 +87,7 @@ public class DiscordBot
             var jsonText = await _riotApiCallHandler.GetMatchV5JsonWithMatchId(matchId);
             var puuid = await _databaseHandler.GetPuuid(discordId);
             
-            MatchV5 match = JsonSerializer.Deserialize<MatchV5>(jsonText);
+            MatchV5? match = JsonSerializer.Deserialize<MatchV5>(jsonText);
 
             foreach (var participant in match.info.participants)
             {
@@ -135,5 +108,11 @@ public class DiscordBot
         }
 
         return -1;
+    }
+
+    public async Task<string> UpdateMatchHistory(ulong discordId)
+    {
+        await _databaseHandler.WriteMatchIdHistory(discordId, "MATCHED_GAME");
+        return "Check database";
     }
 }

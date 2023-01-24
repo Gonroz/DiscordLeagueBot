@@ -12,10 +12,21 @@ public class RiotApiCallHandler
 {
     private HttpClient _httpClient= new();
     private string _riotApiKey = "riotApiKey";
+
+    private string defaultFilePath = "ApiKeys/RiotApiKey.txt";
     
     public RiotApiCallHandler()
     {
-        
+        if (File.Exists(defaultFilePath))
+        {
+            var text = File.ReadAllLines(defaultFilePath);
+            _riotApiKey = text[1];
+            Console.WriteLine($"declaration: updateapikey key: {_riotApiKey}");
+        }
+        else
+        {
+            Console.WriteLine($"Failed to find file at: '{defaultFilePath}'");
+        }
     }
 
     public RiotApiCallHandler(string apiKey)
@@ -33,7 +44,7 @@ public class RiotApiCallHandler
         {
             var text = await File.ReadAllLinesAsync(filePath);
             _riotApiKey = text[1];
-            Console.WriteLine(_riotApiKey);
+            Console.WriteLine($"updateapikey key: {_riotApiKey}");
         }
         else
         {
@@ -48,6 +59,7 @@ public class RiotApiCallHandler
     /// <returns>The JSON is the form of a string.</returns>
     public async Task<string> GetJsonStringFromUrlAsync(string url)
     {
+        Console.WriteLine($"getjson: {_riotApiKey}");
         try
         {
             var response = await _httpClient.GetStringAsync(url);
@@ -116,7 +128,8 @@ public class RiotApiCallHandler
         {
             var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=20&api_key={_riotApiKey}";
             var jsonText = await GetJsonStringFromUrlAsync(url);
-            //Console.WriteLine(jsonText);
+            //Console.WriteLine(url);
+            //Console.WriteLine(_riotApiKey);
             return jsonText;
         }
         catch (Exception e)
