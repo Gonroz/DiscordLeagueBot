@@ -59,7 +59,7 @@ public class RiotApiCallHandler
     /// <returns>The JSON is the form of a string.</returns>
     public async Task<string> GetJsonStringFromUrlAsync(string url)
     {
-        Console.WriteLine($"getjson: {_riotApiKey}");
+        //Console.WriteLine($"getjson: {_riotApiKey}");
         try
         {
             var response = await _httpClient.GetStringAsync(url);
@@ -106,7 +106,7 @@ public class RiotApiCallHandler
         {
             var jsonText = await GetSummonerByNameAsync(summonerName);
             var summoner = JsonSerializer.Deserialize<SummonerV4>(jsonText);
-            Console.WriteLine(summoner.puuid);
+            //Console.WriteLine(summoner.puuid);
             return summoner.puuid;
         }
         catch (Exception e)

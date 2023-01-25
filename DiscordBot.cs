@@ -115,4 +115,73 @@ public class DiscordBot
         await _databaseHandler.WriteMatchIdHistory(discordId, "MATCHED_GAME");
         return "Check database";
     }
+
+    /// <summary>
+    /// Get the win or loss streak of a discord user.
+    /// </summary>
+    /// <param name="discordId">The discord id of the user to check.</param>
+    /// <returns>The streak as an integer. Positive is wins, negative is losses.</returns>
+    public async Task<string> WinLossStreak(ulong discordId)
+    {
+        int streak = 0;
+        bool winning = false;
+        bool shouldBreak = false;
+        
+        try
+        {
+            var puuid = await _databaseHandler.GetPuuid(discordId);
+            var matchIdsJson = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
+            Console.WriteLine(matchIdsJson);
+            var matches = JsonSerializer.Deserialize<string[]>(matchIdsJson);
+
+            var matchJson = await _riotApiCallHandler.GetMatchV5JsonWithMatchId(matches[0]);
+            MatchV5? match = JsonSerializer.Deserialize<MatchV5>(matchJson);
+            foreach (var participant in match.info.participants)
+            {
+                if (participant.puuid == puuid)
+                {
+                    winning = participant.win;
+                }
+            }
+            
+            foreach (var m in matches)
+            {
+                matchJson = await _riotApiCallHandler.GetMatchV5JsonWithMatchId(m);
+                match = JsonSerializer.Deserialize<MatchV5>(matchJson);
+                //Console.WriteLine(match.info.gameCreation);
+                foreach (var participant in match.info.participants)
+                {
+                    if (participant.puuid == puuid)
+                    {
+                        if (participant.win && winning)
+                        {
+                            streak++;
+                            Console.WriteLine("win");
+                        }
+                        else if (!participant.win && !winning)
+                        {
+                            streak--;
+                            Console.WriteLine("loss");
+                        }
+                        else
+                        {
+                            //winning = false;
+                            shouldBreak = true;
+                        }
+                        break;
+                    }
+                }
+
+                if (shouldBreak)
+                    break;
+            }
+            Console.WriteLine($"streak: {streak}");
+            return $"win/loss streak is {streak}";
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
 }

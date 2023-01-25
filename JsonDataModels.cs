@@ -30,6 +30,7 @@ public class MatchV5Metadata
 
 public class MatchV5Info
 {
+    public long gameCreation { get; set; }
     public string? gameMode { get; set; }
     public MatchV5Participant[]? participants { get; set; }
     public string? gameType { get; set; }
