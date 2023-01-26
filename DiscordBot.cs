@@ -189,4 +189,9 @@ public class DiscordBot
             throw;
         }
     }
+
+    public async Task<string> GetMatchIdHistory(ulong discordId)
+    {
+        return await _databaseHandler.GetMatchIdHistory(discordId);
+    }
 }

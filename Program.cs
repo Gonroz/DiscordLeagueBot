@@ -160,6 +160,11 @@ namespace DiscordLeagueBot
                      .WithName("win-loss")
                      .WithDescription("Win Loss streak test")
                      .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("get-match-id-history")
+                     .WithDescription("Get the match id history of a user.")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
                  );
              guildCommands.Add(guildDevelopmentSubCommandGroup);
 
@@ -388,6 +393,10 @@ namespace DiscordLeagueBot
                 
                 case "win-loss":
                     response = $"streak :{await _discordBot.WinLossStreak(command.User.Id)}";
+                    break;
+                
+                case "get-match-id-history":
+                    response = await _discordBot.GetMatchIdHistory(command.User.Id);
                     break;
             }
 

@@ -187,7 +187,7 @@ public class SQLiteDatabaseHandler
                     while (reader.Read())
                     {
                         puuid = reader.GetString(0);
-                        Console.WriteLine(puuid);
+                        //Console.WriteLine(puuid);
                     }
                 }
             }
@@ -272,6 +272,41 @@ public class SQLiteDatabaseHandler
         {
             Console.WriteLine(e);
             throw new Exception("Failed to write match ID history to database", e);
+        }
+    }
+
+    /// <summary>
+    /// Get the match id history as one JSON string.
+    /// </summary>
+    /// <param name="discordId">The discord id to search with.</param>
+    /// <returns>The match id history as JSON.</returns>
+    public async Task<string> GetMatchIdHistory(ulong discordId)
+    {
+        try
+        {
+            var puuid = await GetPuuid(discordId);
+            var matchIdHistory = "";
+
+            await using var connection = new SqliteConnection(_connectionString.ConnectionString);
+            connection.Open();
+            await using var transaction = connection.BeginTransaction();
+            var getCommand = connection.CreateCommand();
+            getCommand.CommandText = $@"SELECT match_id_history
+                                        FROM users
+                                        WHERE riot_puuid = '{puuid}'";
+            await using var reader = await getCommand.ExecuteReaderAsync();
+            while (reader.Read())
+            {
+                matchIdHistory = reader.GetString(0);
+                Console.WriteLine(matchIdHistory);
+            }
+
+            return matchIdHistory;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
     }
 }
