@@ -387,7 +387,7 @@ namespace DiscordLeagueBot
                     break;
                 
                 case "win-loss":
-                    response = await _discordBot.WinLossStreak(command.User.Id);
+                    response = $"streak :{await _discordBot.WinLossStreak(command.User.Id)}";
                     break;
             }
 

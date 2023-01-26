@@ -121,7 +121,7 @@ public class DiscordBot
     /// </summary>
     /// <param name="discordId">The discord id of the user to check.</param>
     /// <returns>The streak as an integer. Positive is wins, negative is losses.</returns>
-    public async Task<string> WinLossStreak(ulong discordId)
+    public async Task<int> WinLossStreak(ulong discordId)
     {
         int streak = 0;
         bool winning = false;
@@ -148,6 +148,11 @@ public class DiscordBot
             {
                 matchJson = await _riotApiCallHandler.GetMatchV5JsonWithMatchId(m);
                 match = JsonSerializer.Deserialize<MatchV5>(matchJson);
+                
+                if (match.info.gameType != "MATCHED_GAME")
+                {
+                    continue;
+                }
                 //Console.WriteLine(match.info.gameCreation);
                 foreach (var participant in match.info.participants)
                 {
@@ -176,7 +181,7 @@ public class DiscordBot
                     break;
             }
             Console.WriteLine($"streak: {streak}");
-            return $"win/loss streak is {streak}";
+            return streak;
         }
         catch (Exception e)
         {
