@@ -173,10 +173,10 @@ namespace DiscordLeagueBot
             guildCommands.Add(guildTestCommand);*/
 
             // Global commands
-            var globalCommand = new SlashCommandBuilder()
+            /*var globalCommand = new SlashCommandBuilder()
                 .WithName("first-global-command")
-                .WithDescription("This is my first global slash command poop");
-            applicationCommandProperties.Add(globalCommand.Build());
+                .WithDescription("This is my first global slash command);
+            applicationCommandProperties.Add(globalCommand.Build());*/
 
             var pingCommand = new SlashCommandBuilder()
                 .WithName("ping")
@@ -194,6 +194,13 @@ namespace DiscordLeagueBot
                 .WithDescription("Make the bot roast a specific user!")
                 .AddOption("users", ApplicationCommandOptionType.User, "User you want to roast.", isRequired: true);
             applicationCommandProperties.Add(roastCommand.Build());
+
+            var registerCommand = new SlashCommandBuilder()
+                .WithName("register")
+                .WithDescription("Register your account to be on the bots hit list!")
+                .AddOption("summoner-name", ApplicationCommandOptionType.String, "Your summoner name.",
+                    isRequired: true);
+            applicationCommandProperties.Add(registerCommand.Build());
 
             /*var summonerNameCommand = new SlashCommandBuilder()
                 .WithName("get-summoner-name")
@@ -261,6 +268,11 @@ namespace DiscordLeagueBot
                 
                 case "roast":
                     await command.RespondAsync(await _discordBot.Roast((IUser)command.Data.Options.First().Value));
+                    break;
+                
+                case "register":
+                    response = await _discordBot.LinkRiotToDiscord(command);
+                    await command.RespondAsync(response);
                     break;
             }
             

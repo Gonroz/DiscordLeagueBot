@@ -85,6 +85,11 @@ public class DiscordBot
         }
     }
 
+    /*public async Task<string> Register(IUser user)
+    {
+        
+    }*/
+
     /// <summary>
     /// Make the bot respond with 'Pong!'.
     /// </summary>
@@ -116,7 +121,10 @@ public class DiscordBot
         {
             var summonerName = (string)command.Data.Options.First().Value;
             await _databaseHandler.RegisterDiscordAndRiotAccount(command.User, summonerName);
-            response = $"Added {command.User.Mention} to the database!";
+
+            await _databaseHandler.WriteMatchIdHistory(command.User.Id);
+            
+            response = $"Registered {command.User.Mention} with the bot!";
         }
         catch (Exception e)
         {
