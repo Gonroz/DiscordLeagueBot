@@ -30,6 +30,62 @@ public class DiscordBot
     }
 
     /// <summary>
+    /// This runs every time the function is called.
+    /// </summary>
+    /// <param name="channel">The channel you want the bot to talk in.</param>
+    public async Task Tick(ISocketMessageChannel channel)
+    {
+        Console.WriteLine("Tick.");
+        await channel.SendMessageAsync("Tick.");
+        try
+        {
+            string[] discordIds = await _databaseHandler.GetRegisteredUsers();
+            foreach (var discordId in discordIds)
+            {
+                var id = ulong.Parse(discordId);
+                //Console.WriteLine($"discordId: {discordId}");
+            
+                var puuid = await _databaseHandler.GetPuuid(id);
+                var mostRecentGameJson = await _riotApiCallHandler.GetMatchIdHistory(puuid, 1);
+                var mostRecentGame = JsonSerializer.Deserialize<string[]>(mostRecentGameJson)[0];
+            
+                var databaseMatchHistoryJson = await _databaseHandler.GetMatchIdHistory(id);
+                var databaseMatchHistory = JsonSerializer.Deserialize<string[]>(databaseMatchHistoryJson);
+
+                if (mostRecentGame != databaseMatchHistory[0])
+                {
+                    var user = await channel.GetUserAsync(id);
+                
+                    var kda = await GetMatchKda(id, mostRecentGame);
+                    var winLossStreak = await WinLossStreak(id);
+
+                    var message = await _insultGenerator.GenerateRandomInsult(user.Mention);
+
+                    if (kda < 1.0)
+                    {
+                        message += $" They had a KDA of {kda}!";
+                    }
+
+                    if (winLossStreak < -2)
+                    {
+                        message += $"They currently have a losing streak of {winLossStreak}";
+                    }
+                    
+                    // Update the database
+                    await _databaseHandler.WriteMatchIdHistory(id);
+
+                    await channel.SendMessageAsync(message);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Make the bot respond with 'Pong!'.
     /// </summary>
     /// <returns>'Pong!'.</returns>
@@ -112,12 +168,12 @@ public class DiscordBot
 
     public async Task<string> UpdateMatchHistory(ulong discordId)
     {
-        await _databaseHandler.WriteMatchIdHistory(discordId, "MATCHED_GAME");
+        await _databaseHandler.WriteMatchIdHistory(discordId);//, "MATCHED_GAME");
         return "Check database";
     }
 
     /// <summary>
-    /// Get the win or loss streak of a discord user.
+    /// Get the win or loss streak of a discord user of matched games only.
     /// </summary>
     /// <param name="discordId">The discord id of the user to check.</param>
     /// <returns>The streak as an integer. Positive is wins, negative is losses.</returns>

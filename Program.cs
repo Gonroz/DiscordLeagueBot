@@ -56,8 +56,7 @@ namespace DiscordLeagueBot
                 //Console.WriteLine("awake");
                 if (_channel != null)
                 {
-                    //Console.WriteLine(channel.Name);
-                    await _channel.SendMessageAsync("Running");
+                    await _discordBot.Tick(_channel);
                 }
             }
             
@@ -190,6 +189,12 @@ namespace DiscordLeagueBot
                 .WithDescription("Allow the bot to run in the channel you send this message.");
             applicationCommandProperties.Add(setChannelCommand.Build());
 
+            var roastCommand = new SlashCommandBuilder()
+                .WithName("roast")
+                .WithDescription("Make the bot roast a specific user!")
+                .AddOption("users", ApplicationCommandOptionType.User, "User you want to roast.", isRequired: true);
+            applicationCommandProperties.Add(roastCommand.Build());
+
             /*var summonerNameCommand = new SlashCommandBuilder()
                 .WithName("get-summoner-name")
                 .WithDescription("Get summoner string by name.")
@@ -253,12 +258,16 @@ namespace DiscordLeagueBot
                 case "development":
                     await HandleDevelopmentCommand(command);
                     break;
+                
+                case "roast":
+                    await command.RespondAsync(await _discordBot.Roast((IUser)command.Data.Options.First().Value));
+                    break;
             }
             
             switch (command.Data.Name)
             {
                 case "ping":
-                    await command.RespondAsync("Pong!"); 
+                    await command.RespondAsync(await _discordBot.PingPong()); 
                     break;
                 
                 case "set-active-channel":
@@ -378,9 +387,9 @@ namespace DiscordLeagueBot
                     response = "no longer a thing";
                     break;
                 
-                case "roast":
+                /*case "roast":
                     response = await _discordBot.Roast((IUser)command.Data.Options.First().Options.First().Value);
-                    break;
+                    break;*/
                 
                 case "kda-test":
                     response = $"{await _discordBot.GetMatchKda(command.User.Id, "NA1_4487433350")}";

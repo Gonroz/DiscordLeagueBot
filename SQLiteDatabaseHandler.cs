@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using System.Threading.Tasks;
@@ -302,6 +303,34 @@ public class SQLiteDatabaseHandler
             }
 
             return matchIdHistory;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<string[]> GetRegisteredUsers()
+    {
+        try
+        {
+            List<string> users = new();
+            
+            await using var connection = new SqliteConnection(_connectionString.ConnectionString);
+            connection.Open();
+            await using var transaction = connection.BeginTransaction();
+            var getCommand = connection.CreateCommand();
+            getCommand.CommandText = $@"SELECT discord_id
+                                        FROM users";
+            await using var reader = await getCommand.ExecuteReaderAsync();
+            while (reader.Read())
+            {
+                users.Add(reader.GetString(0));
+                //Console.WriteLine($"users: {users}");
+            }
+            //Console.WriteLine($"users: {users}");
+            return users.ToArray();
         }
         catch (Exception e)
         {
