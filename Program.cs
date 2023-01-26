@@ -52,7 +52,7 @@ namespace DiscordLeagueBot
 
             while (_client.Status == UserStatus.Online)
             {
-                await Task.Delay(5000);
+                await Task.Delay(300000);
                 //Console.WriteLine("awake");
                 if (_channel != null)
                 {

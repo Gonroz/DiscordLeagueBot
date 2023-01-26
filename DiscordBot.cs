@@ -36,7 +36,7 @@ public class DiscordBot
     public async Task Tick(ISocketMessageChannel channel)
     {
         Console.WriteLine("Tick.");
-        await channel.SendMessageAsync("Tick.");
+        //await channel.SendMessageAsync("Tick.");
         try
         {
             string[] discordIds = await _databaseHandler.GetRegisteredUsers();
