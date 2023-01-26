@@ -130,7 +130,7 @@ public class DiscordBot
         try
         {
             var puuid = await _databaseHandler.GetPuuid(discordId);
-            var matchIdsJson = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
+            var matchIdsJson = await _riotApiCallHandler.GetMatchIdHistory(puuid);
             Console.WriteLine(matchIdsJson);
             var matches = JsonSerializer.Deserialize<string[]>(matchIdsJson);
 

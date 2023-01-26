@@ -210,7 +210,7 @@ public class SQLiteDatabaseHandler
         //await _riotApiCallHandler.UpdateApiKey("ApiKeys/RiotApiKey.txt");
         var commandText = "";
         var puuid = await GetPuuid(discordId);
-        var matchIdHistory = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
+        var matchIdHistory = await _riotApiCallHandler.GetMatchIdHistory(puuid);
         Console.WriteLine($"ids: {matchIdHistory}");
         try
         {
@@ -237,7 +237,7 @@ public class SQLiteDatabaseHandler
         //await _riotApiCallHandler.UpdateApiKey("ApiKeys/RiotApiKey.txt");
         var commandText = "";
         var puuid = await GetPuuid(discordId);
-        var matchIdHistory = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
+        var matchIdHistory = await _riotApiCallHandler.GetMatchIdHistory(puuid);
         
         // this part is new
         string matchedGameIds = "matchedGameIds: ";

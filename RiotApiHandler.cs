@@ -122,13 +122,37 @@ public class RiotApiCallHandler
     /// <param name="puuid">The puuid you want to get the match history for.</param>
     /// <returns>The JSON in the form of a string.</returns>
     /// <exception cref="Exception">Throws whatever exception may occur.</exception>
-    public async Task<string> GetMatchIdHistoryWithPuuid(string puuid)
+    public async Task<string> GetMatchIdHistory(string puuid)
     {
         try
         {
             var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count=20&api_key={_riotApiKey}";
             var jsonText = await GetJsonStringFromUrlAsync(url);
-            //Console.WriteLine(url);
+            Console.WriteLine(url);
+            //Console.WriteLine(_riotApiKey);
+            return jsonText;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw new Exception("Failed to get match id history.", e);
+        }
+    }
+
+    /// <summary>
+    /// Get a certain count of the most recent games.
+    /// </summary>
+    /// <param name="puuid">The puuid of the player to use.</param>
+    /// <param name="count">The number of results to get.</param>
+    /// <returns>The match history as a JSON array.</returns>
+    /// <exception cref="Exception">Whatever error may occur.</exception>
+    public async Task<string> GetMatchIdHistory(string puuid, int count)
+    {
+        try
+        {
+            var url = $"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start=0&count={count}&api_key={_riotApiKey}";
+            var jsonText = await GetJsonStringFromUrlAsync(url);
+            Console.WriteLine(url);
             //Console.WriteLine(_riotApiKey);
             return jsonText;
         }
@@ -139,7 +163,7 @@ public class RiotApiCallHandler
         }
     }
     
-    public async Task<string[]> GetMatchIdHistory(string puuid)
+    /*public async Task<string[]> GetMatchIdHistory(string puuid)
     {
         try
         {
@@ -154,7 +178,7 @@ public class RiotApiCallHandler
             Console.WriteLine(e);
             throw new Exception("Failed to get match id history.", e);
         }
-    }
+    }*/
 
     /// <summary>
     /// Get matchV5 JSON from a certain match id.

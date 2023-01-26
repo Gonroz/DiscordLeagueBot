@@ -283,7 +283,7 @@ namespace DiscordLeagueBot
                     try
                     {
                         var puuid = await _databaseHandler.GetPuuid(command.User.Id);
-                        var idHistory = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
+                        var idHistory = await _riotApiCallHandler.GetMatchIdHistory(puuid);
                         await _databaseHandler.WriteMatchIdHistory(command.User.Id);
                         response = "";
                         foreach (var match in idHistory)
