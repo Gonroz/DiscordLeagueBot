@@ -9,9 +9,9 @@ namespace DiscordLeagueBot;
 
 public class InsultGenerator
 {
-    private string _adjectivesFilePath = @"WordListFiles\adjectives.txt";
-    private string _nounsFilePath = @"WordListFiles\nouns.txt";
-    private string _insultSentencesWithNameFilePath = @"WordListFiles\InsultSentenceStructuresWithName.txt";
+    private string _adjectivesFilePath = @"WordListFiles/adjectives.txt";
+    private string _nounsFilePath = @"WordListFiles/nouns.txt";
+    private string _insultSentencesWithNameFilePath = @"WordListFiles/InsultSentenceStructuresWithName.txt";
     
     private List<string> _adjectives = new();
     private List<string> _nouns = new();
