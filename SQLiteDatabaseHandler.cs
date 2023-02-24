@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using System.Threading.Tasks;
 using Discord;
@@ -14,13 +16,18 @@ public class SQLiteDatabaseHandler
     
     public SQLiteDatabaseHandler()
     {
-        
+        //_riotApiCallHandler.UpdateApiKey("ApiKeys/RiotApiKey.txt");
     }
 
     public SQLiteDatabaseHandler(string fileLocation)
     {
         databaseFileLocation = fileLocation;
         _connectionString.DataSource = fileLocation;
+    }
+
+    public async Task Start()
+    {
+        await _riotApiCallHandler.UpdateApiKey("ApiKeys/RiotApiKey.txt");
     }
 
     public async Task<string> SQLiteTest()
@@ -72,6 +79,10 @@ public class SQLiteDatabaseHandler
         return s;
     }
 
+    /// <summary>
+    /// Registers a discord account into the SQLite database.
+    /// </summary>
+    /// <param name="user">The discord user IUser that will be added.</param>
     public async Task RegisterDiscordAccountToDatabase(IUser user)
     {
         var discordId = user.Id;
@@ -90,7 +101,8 @@ public class SQLiteDatabaseHandler
                 Console.WriteLine("Transaction is open");
                 var insertCommand = connection.CreateCommand();
                 // $"INSERT INTO users (discord_id, discord_username) VALUES ({discordID}, {discordUsername});"
-                commandText = $"INSERT INTO users (discord_id,discord_username) VALUES ({discordId},'{discordUsername}');";
+                commandText = $@"INSERT INTO users (discord_id,discord_username)
+                                VALUES ({discordId},'{discordUsername}');";
                 Console.WriteLine(commandText);
                 insertCommand.CommandText = commandText;
                 insertCommand.ExecuteNonQuery();
@@ -103,6 +115,12 @@ public class SQLiteDatabaseHandler
         }
     }
 
+    /// <summary>
+    /// Registers a discord account and riot account into the SQLite database. They are linked together.
+    /// </summary>
+    /// <param name="user">The discord user being added.</param>
+    /// <param name="riotUsername">The riot username being added.</param>
+    /// <exception cref="Exception">Throws whatever exception that may occur.</exception>
     public async Task RegisterDiscordAndRiotAccount(IUser user, string riotUsername)
     {
         var discordId = user.Id;
@@ -147,7 +165,13 @@ public class SQLiteDatabaseHandler
         }
     }
 
-    public async Task<string> GetPuuidFromDatabaseWithDiscordId(ulong discordId)
+    /// <summary>
+    /// Get the unique riot puuid from the database with a discord id.
+    /// </summary>
+    /// <param name="discordId">The discord account id.</param>
+    /// <returns>A string of the riot puuid.</returns>
+    /// <exception cref="Exception">Throws the exception that caused the puuid to fail to get.</exception>
+    public async Task<string> GetPuuid(ulong discordId)
     {
         var puuid = "";
         try
@@ -156,13 +180,15 @@ public class SQLiteDatabaseHandler
             {
                 connection.Open();
                 var selectPuuidCommand = connection.CreateCommand();
-                selectPuuidCommand.CommandText = $@"SELECT riot_puuid FROM users WHERE discord_id = '{discordId}';";
+                selectPuuidCommand.CommandText = $@"SELECT riot_puuid
+                                                    FROM users
+                                                    WHERE discord_id = '{discordId}';";
                 await using (var reader = await selectPuuidCommand.ExecuteReaderAsync())
                 {
                     while (reader.Read())
                     {
                         puuid = reader.GetString(0);
-                        Console.WriteLine(puuid);
+                        //Console.WriteLine(puuid);
                     }
                 }
             }
@@ -175,11 +201,18 @@ public class SQLiteDatabaseHandler
         return puuid;
     }
 
-    public async Task WriteMatchIdHistoryToDatabaseWithDiscordId(ulong discordId)
+    /// <summary>
+    /// Writes a string of the match id history into the database for the account with the discord id.
+    /// </summary>
+    /// <param name="discordId">The discord id to add the match history to.</param>
+    /// <exception cref="Exception">Throws whatever exception may occur.</exception>
+    public async Task WriteMatchIdHistory(ulong discordId)
     {
+        //await _riotApiCallHandler.UpdateApiKey("ApiKeys/RiotApiKey.txt");
         var commandText = "";
-        var puuid = await GetPuuidFromDatabaseWithDiscordId(discordId);
-        var matchIdHistory = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
+        var puuid = await GetPuuid(discordId);
+        var matchIdHistory = await _riotApiCallHandler.GetMatchIdHistory(puuid);
+        Console.WriteLine($"ids: {matchIdHistory}");
         try
         {
             await using var connection = new SqliteConnection(_connectionString.ConnectionString);
@@ -197,6 +230,112 @@ public class SQLiteDatabaseHandler
         {
             Console.WriteLine(e);
             throw new Exception("Failed to write match ID history to database", e);
+        }
+    }
+
+    public async Task WriteMatchIdHistory(ulong discordId, string gameType)
+    {
+        //await _riotApiCallHandler.UpdateApiKey("ApiKeys/RiotApiKey.txt");
+        var commandText = "";
+        var puuid = await GetPuuid(discordId);
+        var matchIdHistory = await _riotApiCallHandler.GetMatchIdHistory(puuid);
+        
+        // this part is new
+        string matchedGameIds = "matchedGameIds: ";
+        int matches = 0;
+        string[]? matchIds = JsonSerializer.Deserialize<string[]>(matchIdHistory);
+        foreach (var id in matchIds)
+        {
+            var json = await _riotApiCallHandler.GetMatchV5JsonWithMatchId(id);
+            MatchV5? match = JsonSerializer.Deserialize<MatchV5>(json);
+            if (match.info.gameType != gameType)
+            {
+                matchedGameIds += match.metadata.matchId + ",";
+                matches++;
+            }
+        }
+        Console.WriteLine($"match ids: {matchedGameIds} count:{matches}");
+
+        try
+        {
+            await using var connection = new SqliteConnection(_connectionString.ConnectionString);
+            connection.Open();
+            await using var transaction = connection.BeginTransaction();
+            var insertCommand = connection.CreateCommand();
+            commandText = $@"UPDATE users
+                            SET match_id_history = '{matchIdHistory}'
+                            WHERE discord_id = '{discordId}';";
+            insertCommand.CommandText = commandText;
+            insertCommand.ExecuteNonQuery();
+            transaction.Commit();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw new Exception("Failed to write match ID history to database", e);
+        }
+    }
+
+    /// <summary>
+    /// Get the match id history as one JSON string.
+    /// </summary>
+    /// <param name="discordId">The discord id to search with.</param>
+    /// <returns>The match id history as JSON.</returns>
+    public async Task<string> GetMatchIdHistory(ulong discordId)
+    {
+        try
+        {
+            var puuid = await GetPuuid(discordId);
+            var matchIdHistory = "";
+
+            await using var connection = new SqliteConnection(_connectionString.ConnectionString);
+            connection.Open();
+            await using var transaction = connection.BeginTransaction();
+            var getCommand = connection.CreateCommand();
+            getCommand.CommandText = $@"SELECT match_id_history
+                                        FROM users
+                                        WHERE riot_puuid = '{puuid}'";
+            await using var reader = await getCommand.ExecuteReaderAsync();
+            while (reader.Read())
+            {
+                matchIdHistory = reader.GetString(0);
+                Console.WriteLine(matchIdHistory);
+            }
+
+            return matchIdHistory;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    public async Task<string[]> GetRegisteredUsers()
+    {
+        try
+        {
+            List<string> users = new();
+            
+            await using var connection = new SqliteConnection(_connectionString.ConnectionString);
+            connection.Open();
+            await using var transaction = connection.BeginTransaction();
+            var getCommand = connection.CreateCommand();
+            getCommand.CommandText = $@"SELECT discord_id
+                                        FROM users";
+            await using var reader = await getCommand.ExecuteReaderAsync();
+            while (reader.Read())
+            {
+                users.Add(reader.GetString(0));
+                //Console.WriteLine($"users: {users}");
+            }
+            //Console.WriteLine($"users: {users}");
+            return users.ToArray();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
     }
 }

@@ -18,18 +18,22 @@ public class SummonerV4
 public class MatchV5
 {
     public MatchV5Metadata metadata { get; set; }
+    public MatchV5Info info { get; set; }
 }
 
 public class MatchV5Metadata
 {
     public string matchId { get; set; }
     //public string[] participants { get; set; }
+    //public MatchV5Info info { get; set; }
 }
 
 public class MatchV5Info
 {
-    public string gameMode { get; set; }
-    public MatchV5Participant[] paricipants { get; set; }
+    public long gameCreation { get; set; }
+    public string? gameMode { get; set; }
+    public MatchV5Participant[]? participants { get; set; }
+    public string? gameType { get; set; }
 }
 
 public class MatchV5Participant

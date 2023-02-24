@@ -14,46 +14,49 @@ namespace DiscordLeagueBot
         public static void Main(string[] args)
         => new Program().MainAsync().GetAwaiter().GetResult();
 
-        private DiscordSocketClient? _client;
+        private DiscordSocketClient _client = new();
         private ISocketMessageChannel? _channel;
 
         private RiotApiCallHandler _riotApiCallHandler = new();
         private SQLiteDatabaseHandler _databaseHandler = new();
 
-        private InsultGenerator _insultGenerator = new();
-        
-        private string token = "token";
-        private string discordTokenPath = "ApiKeys/DiscordApiKey.txt";
+        //private InsultGenerator _insultGenerator = new();
 
-        private string riotApiKeyPath = "ApiKeys/RiotApiKey.txt";
+        private DiscordBot _discordBot = new();
+        
+        private string _token = "token";
+        private string _discordTokenPath = "ApiKeys/DiscordApiKey.txt";
+
+        private string _riotApiKeyPath = "ApiKeys/RiotApiKey.txt";
 
         public async Task MainAsync()
         {
-            _client = new DiscordSocketClient();
+            //_client = new DiscordSocketClient();
             _client.Log += Log;
             _client.Ready += ClientReady;
             _client.SlashCommandExecuted += SlashCommandHandler;
             
             // InsultGenerator type stuff
-            await _insultGenerator.UpdateAdjectives();
-            await _insultGenerator.UpdateNouns();
+            //await _insultGenerator.UpdateWordListFiles();
             
             await UpdateApiKeys();
 
             var databaseLocation = "./Database.db";
             _databaseHandler = new SQLiteDatabaseHandler(databaseLocation);
+            
+            await _discordBot.Start();
+            await _databaseHandler.Start();
 
-            await _client.LoginAsync(TokenType.Bot, token);
+            await _client.LoginAsync(TokenType.Bot, _token);
             await _client.StartAsync();
 
             while (_client.Status == UserStatus.Online)
             {
-                await Task.Delay(5000);
+                await Task.Delay(300000);
                 //Console.WriteLine("awake");
                 if (_channel != null)
                 {
-                    //Console.WriteLine(channel.Name);
-                    await _channel.SendMessageAsync("Running");
+                    await _discordBot.Tick(_channel);
                 }
             }
             
@@ -69,17 +72,17 @@ namespace DiscordLeagueBot
 
         private async Task UpdateApiKeys()
         {
-            if (File.Exists(discordTokenPath))
+            if (File.Exists(_discordTokenPath))
             {
-                var text = await File.ReadAllLinesAsync(discordTokenPath);
-                token = text[1];
+                var text = await File.ReadAllLinesAsync(_discordTokenPath);
+                _token = text[1];
             }
             else
             {
-                Console.WriteLine($"File not found at: {discordTokenPath}");
+                Console.WriteLine($"File not found at: {_discordTokenPath}");
             }
 
-            await _riotApiCallHandler.UpdateApiKey(riotApiKeyPath);
+            //await _riotApiCallHandler.UpdateApiKey(_riotApiKeyPath);
         }
 
         private async Task ClientReady()
@@ -135,6 +138,32 @@ namespace DiscordLeagueBot
                      .WithName("insult-test")
                      .WithDescription("Insult test")
                      .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("roast")
+                     .WithDescription("Make the bot roast someone.")
+                     .AddOption("user", ApplicationCommandOptionType.User, "User you want to roast", isRequired: true)
+                     .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("kda-test")
+                     .WithDescription("Testing kda")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("update-match-history")
+                     .WithDescription("Update match history.")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("win-loss")
+                     .WithDescription("Win Loss streak test")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
+                 )
+                 .AddOption(new SlashCommandOptionBuilder()
+                     .WithName("get-match-id-history")
+                     .WithDescription("Get the match id history of a user.")
+                     .WithType(ApplicationCommandOptionType.SubCommand)
                  );
              guildCommands.Add(guildDevelopmentSubCommandGroup);
 
@@ -144,10 +173,10 @@ namespace DiscordLeagueBot
             guildCommands.Add(guildTestCommand);*/
 
             // Global commands
-            var globalCommand = new SlashCommandBuilder()
+            /*var globalCommand = new SlashCommandBuilder()
                 .WithName("first-global-command")
-                .WithDescription("This is my first global slash command poop");
-            applicationCommandProperties.Add(globalCommand.Build());
+                .WithDescription("This is my first global slash command);
+            applicationCommandProperties.Add(globalCommand.Build());*/
 
             var pingCommand = new SlashCommandBuilder()
                 .WithName("ping")
@@ -159,6 +188,19 @@ namespace DiscordLeagueBot
                 .WithName("set-active-channel")
                 .WithDescription("Allow the bot to run in the channel you send this message.");
             applicationCommandProperties.Add(setChannelCommand.Build());
+
+            var roastCommand = new SlashCommandBuilder()
+                .WithName("roast")
+                .WithDescription("Make the bot roast a specific user!")
+                .AddOption("users", ApplicationCommandOptionType.User, "User you want to roast.", isRequired: true);
+            applicationCommandProperties.Add(roastCommand.Build());
+
+            var registerCommand = new SlashCommandBuilder()
+                .WithName("register")
+                .WithDescription("Register your account to be on the bots hit list!")
+                .AddOption("summoner-name", ApplicationCommandOptionType.String, "Your summoner name.",
+                    isRequired: true);
+            applicationCommandProperties.Add(registerCommand.Build());
 
             /*var summonerNameCommand = new SlashCommandBuilder()
                 .WithName("get-summoner-name")
@@ -223,12 +265,21 @@ namespace DiscordLeagueBot
                 case "development":
                     await HandleDevelopmentCommand(command);
                     break;
+                
+                case "roast":
+                    await command.RespondAsync(await _discordBot.Roast((IUser)command.Data.Options.First().Value));
+                    break;
+                
+                case "register":
+                    response = await _discordBot.LinkRiotToDiscord(command);
+                    await command.RespondAsync(response);
+                    break;
             }
             
             switch (command.Data.Name)
             {
                 case "ping":
-                    await command.RespondAsync("Pong!"); 
+                    await command.RespondAsync(await _discordBot.PingPong()); 
                     break;
                 
                 case "set-active-channel":
@@ -250,30 +301,16 @@ namespace DiscordLeagueBot
                     break;
                 
                 case "link-riot-to-discord":
-                    try
-                    {
-                        var summonerName = (string)command.Data.Options.First().Value;
-                        await _databaseHandler.RegisterDiscordAndRiotAccount(command.User, summonerName);
-                        response = $"Added {command.User.Mention} to the database!";
-                        //await _riotApiCallHandler.GetPuuidFromUsername(summonerName);
-                    }
-                    catch (Exception e)
-                    {
-                        response = $"Failed to link riot to discord with error: {e.Message}";
-                        if (e.InnerException != null)
-                        {
-                            response += $" Inner exception: {e.InnerException.Message}";
-                        }
-                    }
+                    response = await _discordBot.LinkRiotToDiscord(command);
                     await command.RespondAsync(response);
                     break;
                 
                 case "get-match-id-history":
                     try
                     {
-                        var puuid = await _databaseHandler.GetPuuidFromDatabaseWithDiscordId(command.User.Id);
-                        var idHistory = await _riotApiCallHandler.GetMatchIdHistoryWithPuuid(puuid);
-                        await _databaseHandler.WriteMatchIdHistoryToDatabaseWithDiscordId(command.User.Id);
+                        var puuid = await _databaseHandler.GetPuuid(command.User.Id);
+                        var idHistory = await _riotApiCallHandler.GetMatchIdHistory(puuid);
+                        await _databaseHandler.WriteMatchIdHistory(command.User.Id);
                         response = "";
                         foreach (var match in idHistory)
                         {
@@ -357,7 +394,30 @@ namespace DiscordLeagueBot
                     break;
                 
                 case "insult-test":
-                    response = await _insultGenerator.GenerateRandomInsult();
+                    //response = await _insultGenerator.GenerateRandomInsult();
+                    //response = await _insultGenerator.GenerateRandomInsult(command.User.Mention);
+                    response = "no longer a thing";
+                    break;
+                
+                /*case "roast":
+                    response = await _discordBot.Roast((IUser)command.Data.Options.First().Options.First().Value);
+                    break;*/
+                
+                case "kda-test":
+                    response = $"{await _discordBot.GetMatchKda(command.User.Id, "NA1_4487433350")}";
+                    break;
+                
+                case "update-match-history":
+                    //response = await _discordBot.UpdateMatchHistory(command.User.Id);
+                    response = await _discordBot.UpdateMatchHistory(command.User.Id);
+                    break;
+                
+                case "win-loss":
+                    response = $"streak :{await _discordBot.WinLossStreak(command.User.Id)}";
+                    break;
+                
+                case "get-match-id-history":
+                    response = await _discordBot.GetMatchIdHistory(command.User.Id);
                     break;
             }
 

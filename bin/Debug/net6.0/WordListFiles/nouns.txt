@@ -18,3 +18,10 @@ tryhard
 griefer
 impostor
 teemo
+stinkpot
+mongrel
+salmon
+rock
+rat
+yuumi
+gnome
